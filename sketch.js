@@ -1,83 +1,95 @@
-// variables: XF+-[]
+// variables: F+-[]><
 // axiom: X
-// rules: X → F+X-F+X, F → FF
+// rules: F → F>+F<-F, 
+//        X → F[+X][-X]
+// > = increase angle
+// < = decrease angle
 
-let angle;
-let axiom = "X";
-let sentence = axiom;
-let len = 10;
 
-let rules = [
-  { a: "F", b: "FF" },
-  { a: "X", b: "F+X-F+X" }
-];
+var angle;
+var axiom = "X";
+var sentence = axiom;
+var len = 100
+var angleStack = [];
 
-function generate() {
-  len *= 0.9;
 
-  let nextSentence = "";
-  for (let i = 0; i < sentence.length; i++) {
-    let current = sentence.charAt(i);
-    let found = false;
+var rules = [];
+rules[0] = {
+    a: "F",
+    b: "F>+F<-F"
+}
 
-    for (let r of rules) {
-      if (current === r.a) {
-        nextSentence += r.b;
-        found = true;
-        break;
-      }
+rules[1] = {
+    a: "X",
+    b: "F[+X][-X]"
+}
+
+function generate(){
+    len *= 0.5;
+    var nextSentence = "";
+    for (var i = 0; i < sentence.length; i++) {
+        var current = sentence.charAt(i);
+        var found = false;
+        for (var j = 0; j < rules.length; j++) {
+            if (current == rules[j].a) {
+                found = true;
+                nextSentence += rules[j].b;
+                break;
+            }
+        }
+        if (!found) {
+        nextSentence += current;
+        }
     }
-
-    if (!found) {
-      nextSentence += current;
-    }
-  }
-
-  sentence = nextSentence;
-  drawMotif();
+    sentence = nextSentence;
+    createP(sentence);
+    turtle();
 }
 
 function turtle() {
-  resetMatrix();
-  translate(width / 2, height / 2);
-  rotate(-HALF_PI);
+    background(51);
+    resetMatrix();
 
-  stroke(255);
-  strokeWeight(1);
+    angle = radians(20);   
+    angleStack = [];       
 
-  for (let i = 0; i < sentence.length; i++) {
-    let current = sentence.charAt(i);
+    translate(width / 2, height); 
 
-    if (current === "F") {
-      line(0, 0, len, 0);
-      translate(len, 0);
-    } else if (current === "+") {
-      rotate(angle);
-    } else if (current === "-") {
-      rotate(-angle);
+    stroke(255, 100);
+    
+    for (var i = 0; i < sentence.length; i++) {
+        var current = sentence.charAt(i);
+
+        if (current == "F") {
+            line(0, 0, 0, -len);
+            translate(0, -len);
+        } else if (current == "+") {
+            rotate(angle) //rotate by +x degrees
+        } else if (current == "-") {
+            rotate(-angle) //rotate by -x degrees 
+        } else if (current == "[") { //save angle
+            push(); 
+            angleStack.push(angle);
+        } else if (current == "]") { //restore angle
+            pop();
+            angle = angleStack.pop();
+        } else if (current == ">") {
+            angle *= 1.1;   // increase angle
+        } else if (current == "<") {
+            angle *= 0.9;   // decrease angle
+        }
     }
-    // X is ignored on purpose
-  }
-}
-
-function drawMotif() {
-  background(51);
-  translate(width / 2, height / 2);
-
-  let copies = 4; // try 6 or 8 next
-  for (let i = 0; i < copies; i++) {
-    push();
-    rotate((TWO_PI / copies) * i);
-    turtle();
-    pop();
-  }
 }
 
 function setup() {
   createCanvas(400, 400);
-  angle = radians(45);
-  drawMotif();
-
-  let button = createButton("generate");
+  angle = radians(20);
+  background(51);
+  createP(axiom);
+  turtle();
+  var button = createButton("generate")
   button.mousePressed(generate);
 }
+
+
+
